@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phishing Email Detector</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: white;
+    padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    background-color: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    flex: 1;
+}
+
+h2 {
+    text-align: center;
+    color: #38bdf8;
+    margin-bottom: 10px;
+    font-size: 28px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #94a3b8;
+    margin-bottom: 25px;
+    font-size: 14px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    background-color: rgba(30, 41, 59, 0.6);
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: #38bdf8;
+    background-color: rgba(30, 41, 59, 0.9);
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: none;
+    background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+    color: black;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(56, 189, 248, 0.4);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.result {
+    margin-top: 30px;
+    padding: 20px;
+    border-radius: 8px;
+    display: none;
+    animation: slideIn 0.4s ease;
+}
+
+.result.show {
+    display: block;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.risk-meter {
+    width: 100%;
+    height: 30px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.risk-fill {
+    height: 100%;
+    border-radius: 15px;
+    transition: width 0.6s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.risk-fill.safe {
+    background: linear-gradient(90deg, #10b981, #06b6d4);
+    width: 0%;
+}
+
+.risk-fill.caution {
+    background: linear-gradient(90deg, #f59e0b, #f97316);
+    width: 0%;
+}
+
+.risk-fill.danger {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    width: 0%;
+}
+
+.status-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.status-text {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.risk-percentage {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.advice-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    color: #fbbf24;
+}
+
+.advice-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #e2e8f0;
+}
+
+.result.safe {
+    background-color: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+.result.safe .status-text {
+    color: #10b981;
+}
+
+.result.caution {
+    background-color: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.5);
+}
+
+.result.caution .status-text {
+    color: #f59e0b;
+}
+
+.result.danger {
+    background-color: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.result.danger .status-text {
+    color: #ef4444;
+}
+
+.details {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+.detail-item {
+    margin-bottom: 8px;
+}
+
+.detail-item strong {
+    color: #38bdf8;
+}
+
+footer {
+    margin-top: 40px;
+    padding: 20px;
+    text-align: center;
+    border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.footer-content {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.8;
+}
+
+.footer-content p {
+    margin-bottom: 8px;
+}
+
+.footer-links {
+    margin-top: 12px;
+}
+
+.footer-links a {
+    color: #38bdf8;
+    text-decoration: none;
+    margin: 0 8px;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #0ea5e9;
+    text-decoration: underline;
+}
+
+.copyright {
+    margin-top: 15px;
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.6;
+}
+
+.fud-credit {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #64748b;
+    font-style: italic;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+    }
+
+    h2 {
+        font-size: 24px;
+    }
+
+    .status-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    footer {
+        padding: 15px;
+    }
+
+    .footer-links {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .footer-links a {
+        display: block;
+        margin: 0;
+    }
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="container">
+    <h2>🛡️ Phishing Email Detector</h2>
+    <p class="subtitle">Analyze emails for potential phishing threats</p>
+
+    <div class="input-group">
+        <input type="text" id="sender" placeholder="📧 Sender Email" />
+        <input type="text" id="subject" placeholder="📝 Email Subject" />
+        <textarea id="body" placeholder="📄 Email Body"></textarea>
+        <input type="text" id="link" placeholder="🔗 Link (if any)" />
+    </div>
+
+    <button onclick="scanEmail()">🔍 Scan Email</button>
+
+    <div id="output" class="result"></div>
+</div>
+
+<footer>
+    <div class="footer-content">
+        <p>🛡️ <strong>Phishing Email Detector</strong> - Your trusted tool for email security analysis</p>
+        <p>Stay safe online by identifying potential phishing attempts and protecting your personal information.</p>
+        
+        <div class="footer-links">
+            <a href="#privacy">Privacy Policy</a>
+            <a href="#terms">Terms of Service</a>
+            <a href="#contact">Contact Us</a>
+            <a href="#about">About</a>
+        </div>
+        
+        <div class="copyright">
+            &copy; 2026 Phishing Email Detector. All rights reserved.
+        </div>
+
+        <div class="fud-credit">
+            <strong>Developed by:</strong> 200 Level Students | Federal University Dutse<br>
+            <strong>Group Registration Number:</strong> 41-60
+        </div>
+    </div>
+</footer>
+
+<script>
+function scanEmail() {
+    const sender = document.getElementById("sender").value.toLowerCase().trim();
+    const subject = document.getElementById("subject").value.toLowerCase().trim();
+    const body = document.getElementById("body").value.toLowerCase().trim();
+    const link = document.getElementById("link").value.toLowerCase().trim();
+
+    // Validation
+    if (!sender || !subject || !body) {
+        alert("Please fill in at least Sender, Subject, and Body fields.");
+        return;
+    }
+
+    let score = 0;
+    const maxScore = 30; // Maximum possible score
+
+    // Keyword Detection (0-12 points)
+    const keywords = ["urgent", "verify", "click", "suspend", "account", "password", "confirm", "update", "alert"];
+    keywords.forEach(word => {
+        if (subject.includes(word)) score += 2;
+        if (body.includes(word)) score += 1;
+    });
+
+    // Fake domain detection (0-6 points)
+    if (sender.includes("paypa1") || sender.includes("gmai1") || sender.includes("amaz0n")) {
+        score += 3;
+    }
+
+    if (!sender.includes("@")) {
+        score += 3;
+    }
+
+    // Suspicious link detection (0-12 points)
+    if (link) {
+        if (link.includes(".xyz") || link.includes(".tk") || link.includes(".ml")) {
+            score += 3;
+        }
+
+        if (link.includes("http://")) {
+            score += 3;
+        }
+
+        if (/^\d/.test(link)) {
+            score += 2;
+        }
+
+        if (link.length > 100) {
+            score += 2;
+        }
+
+        if (!link.includes("http://") && !link.includes("https://")) {
+            score += 2;
+        }
+    }
+
+    // Calculate risk percentage
+    const riskPercentage = Math.round((score / maxScore) * 100);
+
+    // Determine risk level
+    let riskLevel = "";
+    let riskClass = "";
+    if (riskPercentage <= 15) {
+        riskLevel = "✅ SAFE EMAIL";
+        riskClass = "safe";
+    } else if (riskPercentage <= 50) {
+        riskLevel = "⚠️ SUSPICIOUS EMAIL";
+        riskClass = "caution";
+    } else {
+        riskLevel = "🚨 HIGH RISK - POSSIBLE PHISHING ATTACK";
+        riskClass = "danger";
+    }
+
+    // Generate advice based on risk percentage
+    let advice = getAdvice(riskPercentage);
+
+    // Display results
+    displayResult(riskLevel, riskClass, riskPercentage, score, maxScore, advice, sender, subject, link);
+}
+
+function getAdvice(riskPercentage) {
+    if (riskPercentage <= 5) {
+        return {
+            title: "💡 Advice",
+            text: "This email appears to be legitimate. However, always verify the sender's email address and be cautious with links. Avoid sharing sensitive information unless you're certain of the sender's identity."
+        };
+    } else if (riskPercentage <= 15) {
+        return {
+            title: "💡 Advice",
+            text: "This email is likely safe, but shows some minor warning signs. Do not click on suspicious links and verify any requests for sensitive information by contacting the company directly using their official contact details."
+        };
+    } else if (riskPercentage <= 30) {
+        return {
+            title: "⚠️ Advice",
+            text: "This email has moderate phishing characteristics. Do NOT click any links or download attachments. Do NOT provide any personal or financial information. Verify the sender's authenticity through official channels before responding."
+        };
+    } else if (riskPercentage <= 50) {
+        return {
+            title: "⚠️ Advice",
+            text: "This email shows clear signs of phishing activity. Avoid all interaction with it. Do NOT click links, download attachments, or reply with any information. Delete the email and report it as spam/phishing to your email provider."
+        };
+    } else if (riskPercentage <= 75) {
+        return {
+            title: "🚨 Critical Advice",
+            text: "This email is highly suspicious and likely a phishing attempt. DELETE immediately. Do NOT interact with any links or attachments. Report the email to your company's IT department and to your email provider. Never share credentials or personal data."
+        };
+    } else {
+        return {
+            title: "🚨 Critical Advice",
+            text: "This email shows VERY HIGH probability of being a phishing/scam attempt. DELETE immediately without opening any links or attachments. Report to your IT security team and email provider. If you've already interacted with it, change your passwords immediately."
+        };
+    }
+}
+
+function displayResult(riskLevel, riskClass, riskPercentage, score, maxScore, advice, sender, subject, link) {
+    const output = document.getElementById("output");
+    
+    const riskFillClass = riskPercentage <= 15 ? "safe" : riskPercentage <= 50 ? "caution" : "danger";
+
+    output.innerHTML = `
+        <div class="risk-meter">
+            <div class="risk-fill ${riskFillClass}" style="width: ${riskPercentage}%;">
+                ${riskPercentage > 5 ? riskPercentage + "%" : ""}
+            </div>
+        </div>
+
+        <div class="status-header">
+            <div class="status-text">${riskLevel}</div>
+            <div class="risk-percentage">${riskPercentage}% Risk</div>
+        </div>
+
+        <div class="advice-title">${advice.title}</div>
+        <div class="advice-text">${advice.text}</div>
+
+        <div class="details">
+            <div class="detail-item"><strong>Risk Score:</strong> ${score}/${maxScore}</div>
+            <div class="detail-item"><strong>Sender:</strong> ${sender}</div>
+            <div class="detail-item"><strong>Subject:</strong> ${subject}</div>
+            ${link ? `<div class="detail-item"><strong>Link Found:</strong> ${link.substring(0, 50)}${link.length > 50 ? "..." : ""}</div>` : ""}
+        </div>
+    `;
+
+    output.className = `result show ${riskClass}`;
+}
+
+</script>
+
+</body>
+</html>
