@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Email Detector</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        #result { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Phishing Email Detector</h1>
+    <form id="email-form">
+        <label for="email">Enter the email content:</label><br>
+        <textarea id="email" rows="10" cols="50"></textarea><br>
+        <button type="submit">Detect Phishing</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('email-form').onsubmit = function(event) {
+            event.preventDefault();
+            const emailContent = document.getElementById('email').value;
+            // Here you would typically call your phishing detection logic
+            // For this example, we'll just simulate a detection
+            const isPhishing = Math.random() < 0.5; // Simulated random result
+            document.getElementById('result').innerText = isPhishing ? 'Phishing detected!' : 'No phishing detected.';
+        };
+    </script>
+</body>
+</html>
